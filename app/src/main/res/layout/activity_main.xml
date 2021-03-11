@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout android:layout_width="match_parent"
+<androidx.drawerlayout.widget.DrawerLayout android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
@@ -52,7 +52,7 @@
     </RadioGroup>
 
 </RelativeLayout>
-    <android.support.design.widget.NavigationView
+    <com.google.android.material.navigation.NavigationView
         android:id="@+id/design_navigation_viewq"
         android:layout_width="match_parent"
         android:background="@drawable/mr_right"
@@ -60,5 +60,5 @@
         app:headerLayout="@layout/drawtop"
         app:menu="@menu/draw_home_layout"
         android:layout_gravity="start">
-    </android.support.design.widget.NavigationView>
-</android.support.v4.widget.DrawerLayout>
+    </com.google.android.material.navigation.NavigationView>
+</androidx.drawerlayout.widget.DrawerLayout>

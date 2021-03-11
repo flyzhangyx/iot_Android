@@ -3,10 +3,6 @@ package cn.edu.cqupt.my;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,8 +12,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.litepal.LitePal;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,9 +60,9 @@ public class UserContext extends BaseFragment {
         });
 
         RecyclerView recyclerview=findViewById(R.id.Recycler_context);
-        LinearLayoutManager Layoutmanager=new LinearLayoutManager(getActivity());
+        LinearLayoutManager Layoutmanager=new LinearLayoutManager(this.getActivity());
         recyclerview.setLayoutManager(Layoutmanager);
-        recyclerview.addItemDecoration(new DividerItemDecoration(getActivity(),DividerItemDecoration.VERTICAL));
+        recyclerview.addItemDecoration(new DividerItemDecoration(this.getActivity(),DividerItemDecoration.VERTICAL));
         adapter=new ContextAdapter(Talktoid);
         recyclerview.setAdapter(adapter);
         initList();

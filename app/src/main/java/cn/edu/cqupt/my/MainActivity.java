@@ -1,64 +1,41 @@
 package cn.edu.cqupt.my;
-import android.app.Activity;
-import android.app.ProgressDialog;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.litepal.LitePal;
-import org.litepal.crud.LitePalSupport;
-import org.litepal.tablemanager.Connector;
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.google.android.material.navigation.NavigationView;
+
+import org.litepal.LitePal;
+
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MainActivity extends BaseActivity {
     @Override
@@ -120,8 +97,12 @@ public class MainActivity extends BaseActivity {
         /*************************************/
         class  NetworkChangeReceiver extends BroadcastReceiver {
             @Override
-            public void onReceive(Context context,Intent intent){
-                ConnectivityManager connectionManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            public void onReceive(@NonNull Context context,Intent intent){
+                if(intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION))
+                {
+
+                }
+                /*ConnectivityManager connectionManager= (ConnectivityManager) getSystemService (Context.NETWORK_STATS_SERVICE);
                 NetworkInfo networkInfo=connectionManager.getActiveNetworkInfo();
                 if(networkInfo!=null ){
                     if(networkInfo.getExtraInfo()!=null)
@@ -129,8 +110,9 @@ public class MainActivity extends BaseActivity {
                 }else
                 {
                     network=false;
-                }
-                Home.Netset(!network);
+                }*/
+                network = false;
+                Home.Netset(network);
             }
         }
         /*****************************************************/
@@ -146,6 +128,7 @@ public class MainActivity extends BaseActivity {
             super.handleMessage(msg);
         }
     };
+    @LayoutRes
     @Override
     protected int attachLayoutRes() {
         return R.layout.activity_main;
@@ -528,8 +511,8 @@ public class MainActivity extends BaseActivity {
                 }
             }
         });
-        Intent intent = new Intent(MainActivity.this, Welcome2.class);
-        MainActivity.this.startActivity(intent);
+//        Intent intent = new Intent(MainActivity.this, Welcome2.class);
+//        MainActivity.this.startActivity(intent);
     }
 
 

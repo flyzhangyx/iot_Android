@@ -2,29 +2,25 @@ package cn.edu.cqupt.my;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaRouter;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import org.litepal.LitePal;
-import org.litepal.crud.DataSupport;
-import org.litepal.crud.LitePalSupport;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Timer;
 
 public class TalkActivity extends AppCompatActivity {
 
