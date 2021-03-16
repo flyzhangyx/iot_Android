@@ -94,7 +94,6 @@ public class LoginActivity extends ActivityCollector {
                     //  Toast.makeText(LoginActivity.this, "网络错误", Toast.LENGTH_SHORT).show();
                     //LoginConfig.saveBoolean(LoginActivity.this,"isLogin",false);
                 } else if (Loginmsg.obj.toString().equals("Si")) {
-
                     if (isManualSign == 1) {
                         ManualSignTpDialog.dismiss();
                     } else {
@@ -123,58 +122,53 @@ public class LoginActivity extends ActivityCollector {
         new Thread(qClientThread).start();
         //********************判断是否自动登录**************************
         Reconnect();
+        /********************/
         mBtnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Message SendLoginmsg = new Message();
-                try {
-                    SendLoginmsg.what = 1;
-                    bundle.putString("ID", "namestring");
-                    bundle.putString("Checkcode", "RSA");
-                    bundle.putString("TalkToid", "NULL");
-                    bundle.putString("data", "NULL");
-                    bundle.putString("PWD", MD5Util.stringtoMD5("passwordstring"));
-                    bundle.putString("REPWD", "NULL");
-                    SendLoginmsg.setData(bundle);
-                    isManualSign = 1;
-                    qClientThread.revHandler.sendMessage(SendLoginmsg);
-                    ManualSignTpDialog.show();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                namestring = mEtusername.getText().toString();
+                passwordstring = mEtpassword.getText().toString();
+                if (namestring.length() <= 11 && namestring.length() >= 9) {
+                    if (passwordstring.length() >= 6 && passwordstring.length() <= 18) {
+                        Message SendLoginmsg = new Message();
+                        try {
+                            SendLoginmsg.what = 1;
+                            bundle.putString("ID", namestring);
+                            bundle.putString("Checkcode", "SIA");
+                            bundle.putString("TalkToid", "NULL");
+                            char[] pwd_md5 = new char[512];
+                            System.arraycopy((MD5Util.stringtoMD5(passwordstring)+'\0').toCharArray(),0,pwd_md5,0,(MD5Util.stringtoMD5(passwordstring)+'\0').length());
+                            int [] outCrypto = new int[512];
+                            RSAUtils.encodeMessage(32*msocket.KeyBlockBytes,msocket.KeyBlockBytes,pwd_md5,outCrypto,msocket.publicKey,msocket.commonKey);
+                            byte [] t = new byte[512];
+                            for(int i=0;i<32*msocket.KeyBlockBytes;i++) {
+                                Log.d("a",outCrypto[i]+"|");
+                                for(int j = 0;j<4;j++)
+                                {
+                                    t[j+i*4]=(TypeService.int2Byte4C(outCrypto[i])[j]);
+                                }
+                            }
+                            bundle.putBoolean("isEncrypt",true);
+                            bundle.putInt("encryptLen",32*msocket.KeyBlockBytes*4);
+                            bundle.putByteArray("encryptData",t);
+                            bundle.putString("PWD", MD5Util.stringtoMD5(passwordstring));
+                            bundle.putString("REPWD", "NULL");
+                            SendLoginmsg.setData(bundle);
+                            isManualSign = 1;
+                            qClientThread.revHandler.sendMessage(SendLoginmsg);
+                            ManualSignTpDialog.show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Toast.makeText(LoginActivity.this, "密码格式错误", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(LoginActivity.this, "账户名格式错误", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-//        mBtnLogin.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                namestring = mEtusername.getText().toString();
-//                passwordstring = mEtpassword.getText().toString();
-//                if (namestring.length() <= 11 && namestring.length() >= 9) {
-//                    if (passwordstring.length() >= 6 && passwordstring.length() <= 18) {
-//                        Message SendLoginmsg = new Message();
-//                        try {
-//                            SendLoginmsg.what = 1;
-//                            bundle.putString("ID", namestring);
-//                            bundle.putString("Checkcode", "SI");
-//                            bundle.putString("TalkToid", "NULL");
-//                            bundle.putString("data", "NULL");
-//                            bundle.putString("PWD", MD5Util.stringtoMD5(passwordstring));
-//                            bundle.putString("REPWD", "NULL");
-//                            SendLoginmsg.setData(bundle);
-//                            isManualSign = 1;
-//                            qClientThread.revHandler.sendMessage(SendLoginmsg);
-//                            ManualSignTpDialog.show();
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                    } else {
-//                        Toast.makeText(LoginActivity.this, "密码格式错误", Toast.LENGTH_SHORT).show();
-//                    }
-//                } else {
-//                    Toast.makeText(LoginActivity.this, "账户名格式错误", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//        });
+
         mBtnRegist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -277,10 +271,24 @@ public class LoginActivity extends ActivityCollector {
                         passwordstring = LoginConfig.getPWD(LoginActivity.this);
                         // mEtusername.setText(namestring);
                         bundle.putString("ID", namestring);
-                        bundle.putString("Checkcode", "SI");
+                        bundle.putString("Checkcode", "SIA");
                         bundle.putString("TalkToid", "0000");
-                        bundle.putString("data", "NULL");
-                        bundle.putString("PWD", passwordstring);
+                        char[] pwd_md5 = new char[512];
+                        System.arraycopy(passwordstring.toCharArray(),0,pwd_md5,0,passwordstring.toCharArray().length);
+                        int [] outCrypto = new int[512];
+                        RSAUtils.encodeMessage(32*msocket.KeyBlockBytes,msocket.KeyBlockBytes,pwd_md5,outCrypto,msocket.publicKey,msocket.commonKey);
+                        byte [] t = new byte[512];
+                        for(int i=0;i<32*msocket.KeyBlockBytes;i++) {
+                            Log.d("a",outCrypto[i]+"|");
+                            for(int j = 0;j<4;j++)
+                            {
+                                t[j+i*4]=(TypeService.int2Byte4C(outCrypto[i])[j]);
+                            }
+                        }
+                        bundle.putBoolean("isEncrypt",true);
+                        bundle.putInt("encryptLen",32*msocket.KeyBlockBytes*4);
+                        bundle.putByteArray("encryptData",t);
+                        bundle.putString("PWD", MD5Util.stringtoMD5(passwordstring));
                         bundle.putString("REPWD", "NULL");
                         sendLoginmsg.setData(bundle);
                         isManualSign = 0;
@@ -292,7 +300,7 @@ public class LoginActivity extends ActivityCollector {
                     }
                 }
             }
-        }, 100);
+        }, 500);
     }
    /* public static Context GetLoginActivvitycontext()
     {

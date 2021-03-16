@@ -30,4 +30,19 @@ public class Struct {
         //System.arraycopy("\n".getBytes(),0,buf,612,"\n".getBytes().length);
         return buf;
     }
+    public static byte[] getBuf(String a,String b, String c,String d,String e,String Savedinstance,int Encryptlen,byte EncData[])
+    {
+        Struct(a,b,c,d,e,"encryptData",Savedinstance);
+        System.arraycopy(Checkcode.getBytes(),0,buf,0,Checkcode.getBytes().length);
+        System.arraycopy(Id.getBytes(),0,buf,18,Id.getBytes().length);
+        System.arraycopy(Pwd.getBytes(),0,buf,30,Pwd.getBytes().length);
+        System.arraycopy(talktoId.getBytes(),0,buf,63,talktoId.getBytes().length);
+        System.arraycopy(RPWD.getBytes(),0,buf,75,RPWD.getBytes().length);
+        for(int i = 0;i<Encryptlen;i++)
+        {
+            buf[108+i]=EncData[i];
+        }
+        //System.arraycopy("\n".getBytes(),0,buf,612,"\n".getBytes().length);
+        return buf;
+    }
 }

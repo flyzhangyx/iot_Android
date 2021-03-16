@@ -37,7 +37,7 @@ public class msocket extends Socket {
             }
             try {
                 socket.getOutputStream().write("ZYXX1226".getBytes());
-                socket.getOutputStream().write("RSA".getBytes());
+                socket.getOutputStream().write("RSA11111".getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }

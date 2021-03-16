@@ -65,10 +65,10 @@ public class ClientLoginThread implements Runnable {
                                 if(str.contains("RSA"))
                                 {
                                     String[] strings=content.substring(108,620).split("_",4);
-                                    msocket.commonKey=Integer.parseInt(strings[0]);
-                                    msocket.publicKey=Integer.parseInt(strings[1]);
+                                    msocket.publicKey=Integer.parseInt(strings[0]);
+                                    msocket.commonKey=Integer.parseInt(strings[1]);
                                     msocket.KeyBlockBytes=Integer.parseInt(strings[2]);
-                                    Log.d("RSAKey",msocket.commonKey+"|"+msocket.publicKey+"|"+msocket.KeyBlockBytes);
+                                    Log.d("RSAKey",msocket.publicKey+"|"+msocket.commonKey+"|"+msocket.KeyBlockBytes);
                                 }
                                 if (str.contains("SI")) {
                                     msg.obj = "SI";
@@ -100,7 +100,10 @@ public class ClientLoginThread implements Runnable {
                         if (msg.what == 1) {
                             tag = msg.getData().getString("Checkcode");
                             try {
-                                mOutputStream.write(Struct.getBuf(msg.getData().getString("Checkcode"), msg.getData().getString("ID"), msg.getData().getString("PWD"), msg.getData().getString("TalkToid"), msg.getData().getString("REPWD"), msg.getData().getString("data"), null));
+                                if(msg.getData().getBoolean("isEncrypt"))
+                                    mOutputStream.write(Struct.getBuf(msg.getData().getString("Checkcode"), msg.getData().getString("ID"), msg.getData().getString("PWD"), msg.getData().getString("TalkToid"), msg.getData().getString("REPWD"),null,msg.getData().getInt("encryptLen"),msg.getData().getByteArray("encryptData")));
+                                else
+                                    mOutputStream.write(Struct.getBuf(msg.getData().getString("Checkcode"), msg.getData().getString("ID"), msg.getData().getString("PWD"), msg.getData().getString("TalkToid"), msg.getData().getString("REPWD"), msg.getData().getString("data"), null));
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
