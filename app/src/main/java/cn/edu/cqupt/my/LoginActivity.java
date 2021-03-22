@@ -82,10 +82,7 @@ public class LoginActivity extends ActivityCollector {
                     }
                     Log.d("SI",Loginmsg.obj.toString());
                     tipDialog.show();
-                    // LoginConfig.saveBoolean(LoginActivity.this,"isLogin",true);
-                    LoginConfig.saveUser(LoginActivity.this, namestring, MD5Util.stringtoMD5(passwordstring));
-                    //LoginConfig.saveUser(LoginActivity.this,namestring,MD5Util.stringtoMD5(passwordstring));
-                    //Toast.makeText(LoginActivity.this, LoginConfig.getPWD(LoginActivity.this), Toast.LENGTH_SHORT).show();
+                    LoginConfig.saveUser(LoginActivity.this, namestring, MD5Util.stringtoMD5(passwordstring)+'\0');
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     LoginActivity.this.startActivity(intent);
                     tipDialog.dismiss();
@@ -121,7 +118,7 @@ public class LoginActivity extends ActivityCollector {
         qClientThread = new ClientLoginThread(qHandler);
         new Thread(qClientThread).start();
         //********************判断是否自动登录**************************
-        Reconnect();
+        Autoconnect();
         /********************/
         mBtnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -259,7 +256,7 @@ public class LoginActivity extends ActivityCollector {
         return true;
     }
 
-    public void Reconnect() {
+    public void Autoconnect() {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -274,12 +271,11 @@ public class LoginActivity extends ActivityCollector {
                         bundle.putString("Checkcode", "SIA");
                         bundle.putString("TalkToid", "0000");
                         char[] pwd_md5 = new char[512];
-                        System.arraycopy(passwordstring.toCharArray(),0,pwd_md5,0,passwordstring.toCharArray().length);
+                        System.arraycopy((passwordstring).toCharArray(),0,pwd_md5,0,passwordstring.length());
                         int [] outCrypto = new int[512];
                         RSAUtils.encodeMessage(32*msocket.KeyBlockBytes,msocket.KeyBlockBytes,pwd_md5,outCrypto,msocket.publicKey,msocket.commonKey);
                         byte [] t = new byte[512];
                         for(int i=0;i<32*msocket.KeyBlockBytes;i++) {
-                            Log.d("a",outCrypto[i]+"|");
                             for(int j = 0;j<4;j++)
                             {
                                 t[j+i*4]=(TypeService.int2Byte4C(outCrypto[i])[j]);

@@ -29,6 +29,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.navigation.NavigationView;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
 import org.litepal.LitePal;
 
@@ -169,6 +171,8 @@ public class MainActivity extends BaseActivity {
         user_head_webview.setWebViewClient(new WebViewClient(){
 
         });
+
+
         String postdata="user="+LoginConfig.getID(MainActivity.ctx)+"&"+"password="+LoginConfig.getPWD(MainActivity.ctx);
         byte[] postbyte=postdata.getBytes();
         user_head_webview.postUrl("http://uubang.flyzhangyx.com/user_head.php",postbyte);
@@ -202,32 +206,50 @@ public class MainActivity extends BaseActivity {
                     a.putString("DestUrl", "https://jinshuju.net/f/DGMYkQ");
                     WebviewActivity.Actionstart(MainActivity.this, a);
                 } else if (index == R.id.drawer_menu_update) {
-                    Uri uri = Uri.parse("http://flyzhangyx.com/uubang.apk");
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(intent);
+                    CheckAppUpdate();
                 } else if (index == R.id.drawer_menu_logout) {
-                    Bundle s = new Bundle();
-                    s.putString("TalkToid", " ");
-                    s.putString("Checkcode", "STO");
-                    s.putString("data", " ");
-                    s.putString("ID", "00000000000");
-                    s.putString("PWD", "000000");
-                    s.putString("REPWD", "NULL");
-                    new Handler().postDelayed(new Runnable() {
+                    final QMUIDialog.CheckBoxMessageDialogBuilder logoutDlg = new QMUIDialog.CheckBoxMessageDialogBuilder(ctx);
+                    logoutDlg.setChecked(true)
+                            .setMessage("清除此账号本地数据")
+                            .setTitle("注销登录")
+                            .setCancelable(false)
+                            .addAction("取消", new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    dialog.dismiss();
+                                }
+                            }).addAction("确认", new QMUIDialogAction.ActionListener() {
                         @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(500);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                        public void onClick(QMUIDialog dialog, int index) {
+                            Bundle s = new Bundle();
+                            s.putString("TalkToid", " ");
+                            s.putString("Checkcode", "STO");
+                            s.putString("data", " ");
+                            s.putString("ID", "00000000000");
+                            s.putString("PWD", "000000");
+                            s.putString("REPWD", "NULL");
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Thread.sleep(500);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }, 500);
+                            if(logoutDlg.isChecked())
+                            {
+                                Smartlife.ClearContact();
+                                Home.ClearNmsg();
+                                LoginActivity.autoSignclear();
                             }
+                            MainActivity.sendMessage(s);
+                            dialog.dismiss();
+                            // IoTcmdActivity.recclear();
+
                         }
-                    }, 500);
-                    UserContext.ClearContact();
-                    Smartlife.ClearContact();
-                    Home.ClearNmsg();
-                    MainActivity.sendMessage(s);
-                    // IoTcmdActivity.recclear();
+                    }).show();
                 }
                 return true;
             }
@@ -247,16 +269,9 @@ public class MainActivity extends BaseActivity {
         sd.putString("Checkcode", "RME");
         sd.putString("data", "");
         MainActivity.sendMessage(sd);
-        //检查更新
-        Bundle sd1 = new Bundle();
-        sd1.putString("TalkToid", "");
-        sd1.putString("Checkcode", "UPD");
-        sd1.putString("data", "");
-        MainActivity.sendMessage(sd1);
+
         //******************************************************
         /**timer**/
-        //pic.pic_get("http://flyzhangyx.com/bingDaily.jpg").getByteCount();
-        //oast.makeText(MainActivity.this,pic.pic_get("http://flyzhangyx.com/bingDaily.jpg").getByteCount(),Toast.LENGTH_SHORT).show();
 
         task = new TimerTask() {
             @Override
@@ -271,47 +286,6 @@ public class MainActivity extends BaseActivity {
                     user_head_webview.postUrl("http://uubang.flyzhangyx.com/user_head.php",postbyte);
                     update_pic=false;
                 }
-//                String postdata="user="+LoginConfig.getID(MainActivity.ctx)+"&"+"password="+LoginConfig.getPWD(MainActivity.ctx);
-//                byte[] postbyte=postdata.getBytes();
-//                user_head_webview.postUrl("http://uubang.flyzhangyx.com/user_head.php",postbyte);
-                /*if (!pic_yes) {
-                    taskpic = new Get_User_pic_task();
-                    taskpic.execute();
-                }
-                if(!pic_f)
-                {
-                    File file = new File("/sdcard/DCIM/Camera/"+"qq.jpg");
-                    if(file.exists()){
-                        file.delete();
-                    }
-                    Bitmap bitmap=pic.pic_get("http://flyzhangyx.com/bingDaily.jpg");
-                    if(bitmap!=null)
-                    {
-                        pic_f=true;
-                        FileOutputStream out;
-                        try{
-                            out = new FileOutputStream(file);
-                            if(bitmap.compress(Bitmap.CompressFormat.PNG, 90, out))
-                            {
-                                out.flush();
-                                out.close();
-                            }
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            e.printStackTrace();
-                        }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                    else
-                    {
-                        pic_f=false;
-                        //Toast.makeText(MainActivity.this,"errer",Toast.LENGTH_SHORT).show();
-                    }
-                }*/
                 /**********************/
             }
         };
@@ -441,19 +415,8 @@ public class MainActivity extends BaseActivity {
                     //Toast.makeText(MainActivity.this,"网络连接超时",Toast.LENGTH_SHORT).show();
                 }
                 else if (Loginmsg.obj.equals("UPD")) {
-                    Toast.makeText(MainActivity.this, "应用有新版本", Toast.LENGTH_SHORT).show();
                     showupdDialog();
                 }
-//                else if (Loginmsg.obj.equals("NUP")) {//新的更新
-//                    if(true);
-                    // Toast.makeText(MainActivity.this,bundle.getString("data")+"vv",Toast.LENGTH_SHORT).show();
-                    //Toast.makeText(MainActivity.this,"网络连接超时",Toast.LENGTH_SHORT).show();
-//                }
-               /* else if(Loginmsg.obj.equals("RES"))
-                {
-                    qClientThread = new TalkThread(qHandler);
-                    new Thread(qClientThread).start();
-                }*/
             }
         };
 
@@ -654,102 +617,34 @@ public class MainActivity extends BaseActivity {
         settings.setLoadWithOverviewMode(true);
     }
     public void showupdDialog() {
-        updateDialog = new updateDialog(this,R.layout.activity_main,onClickListener);
-        updateDialog.show();
-    }
-    View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.button_upd:
-                    Uri uri = Uri.parse("http://flyzhangyx.com/uubang.apk");
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(intent);
-                    updateDialog.cancel();
-                    break;
-                case  R.id.button_ignor:
-                    updateDialog.cancel();
-                    break;
-            }
-        }
-
-    };
-    /***************************************AsyncTask获取用户头像********************************/
-    /**
-     * 步骤1：创建AsyncTask子类
-     *   a. 继承AsyncTask类
-     *   b. 为3个泛型参数指定类型；若不使用，可用java.lang.Void类型代替
-     *   c. 根据需求，在AsyncTask子类内实现核心方法
-     */
-    /*private class Get_User_pic_task extends AsyncTask<String, Integer, String> {
-
-        // 方法1：onPreExecute（）
-        // 作用：执行 线程任务前的操作
-        @Override
-        protected void onPreExecute() {
-            //text.setText("加载中");
-            // 执行前显示提示
-        }
-
-
-        // 方法2：doInBackground（）
-        // 作用：接收输入参数、执行任务中的耗时操作、返回 线程任务执行的结果
-        // 此处通过计算从而模拟“加载进度”的情况
-        @Override
-        protected String doInBackground(String... params) {
-            OkHttpClient client = new OkHttpClient();//实例化
-            Request request = new Request.Builder().url("http://flyzhangyx.com/head_pic/12345678901.jpg").build(); //传入图片网址，，URL为自己定义好的网址。
-            client.newCall(request).enqueue(new Callback() {//实例化一个call的对象
-                public void onFailure(Call call, IOException e) {
-                    Toast.makeText(MainActivity.this,e.toString(),Toast.LENGTH_SHORT).show();
-                }
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {//成功
-                        objectimg = response.body().byteStream();
-                    } else {//失败
-                        objectimg = null;
-                        //Toast.makeText(MainActivity.this,response.body().string(),Toast.LENGTH_SHORT).show();
-
+        /*updateDialog = new updateDialog(this,R.layout.activity_main,onClickListener);
+        updateDialog.show();*/
+        new QMUIDialog.MessageDialogBuilder(ctx)
+                .setTitle("应用有新版本")
+                .setMessage("****************************************")
+                .addAction("稍后手动更新", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
                     }
-                }
-            });
-            return "TRUE";
-        }
+                })
+                .addAction("立即下载更新", new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                        Uri uri = Uri.parse("http://flyzhangyx.com/uubang.apk");
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(intent);
+                    }
+                }).show();
+    }
 
-        // 方法3：onProgressUpdate（）
-        // 作用：在主线程 显示线程任务执行的进度
-        @Override
-        protected void onProgressUpdate(Integer... progresses) {
-
-            //progressBar.setProgress(progresses[0]);
-            //text.setText("loading..." + progresses[0] + "%");
-
-        }
-
-        // 方法4：onPostExecute（）
-        // 作用：接收线程任务执行结果、将执行结果显示到UI组件
-        @Override
-        protected void onPostExecute(String result) {
-            // 执行完毕后，则更新UI
-            if(objectimg!=null) {
-                Bitmap bitmap=BitmapFactory.decodeStream(objectimg);
-                imageView.setImageBitmap(bitmap);
-                //Toast.makeText(MainActivity.ctx,bitmap.getByteCount()+" bytes",Toast.LENGTH_SHORT).show();
-                pic_yes=true;
-                }
-                else
-                {
-                    pic_f=false;
-                    //Toast.makeText(MainActivity.this,"errer",Toast.LENGTH_SHORT).show();
-                }
-                //Toast.makeText(MainActivity.ctx,bitmap.toString(),Toast.LENGTH_SHORT).show();
-        }
-        // 方法5：onCancelled()
-        // 作用：将异步任务设置为：取消状态
-        @Override
-        protected void onCancelled() {
-        }
-    }*/
-
-
+    private void CheckAppUpdate()
+    {
+        Bundle sd1 = new Bundle();
+        sd1.putString("TalkToid", "");
+        sd1.putString("Checkcode", "UPD");
+        sd1.putString("data", "");
+        MainActivity.sendMessage(sd1);
+    }
 }
