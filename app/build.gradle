@@ -42,6 +42,9 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'org.jetbrains:annotations-java5:15.0'
+    def qmui_arch_version = '2.0.0-alpha10'
+    implementation "com.qmuiteam:arch:$qmui_arch_version"
+    annotationProcessor "com.qmuiteam:arch-compiler:$qmui_arch_version" // use annotationProcessor if java
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
