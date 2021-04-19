@@ -11,10 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,6 +51,7 @@ public class TalkThread implements Runnable {
                     String content =null;
                     String data = null;
                     String Talktoid = null;
+                    String save = null;
                     /*try {
                         mSocket.setSoTimeout(6000);
                     } catch (SocketException e) {
@@ -101,6 +99,7 @@ public class TalkThread implements Runnable {
                                     str = content.substring(0, 3);
                                     data = content.substring(108, 620).replaceAll("<HC>", "\n");
                                     Talktoid = content.substring(63, 74);
+                                    save = content.substring(621,720);
                                 }
                                 else if(content.length()>=10||content.length()<=12)
                                 {
@@ -172,6 +171,24 @@ public class TalkThread implements Runnable {
                                 msg.obj ="RCO";
                                 a.putString("data"," ");
                                 a.putString("TalkToid",Talktoid);
+                            }else if (str.equals("RCI")) {
+                                msg.obj ="RCI";
+                                String tmp[] = data.split("_");
+                                a.putString("DevClass",tmp[0]);
+                                a.putString("DevKeyId",tmp[1]);
+                                a.putString("DevOpenId",Talktoid);
+                            } else if (str.equals("IOT")) {
+                                msg.obj ="IOT";
+                                String tmp[] = data.split("_");
+                                a.putString("DevClass",tmp[0]);
+                                a.putString("DevStatus",tmp[1]);
+                                a.putString("DevContent",tmp[2]);
+                                a.putString("DevContentUpdateTime",tmp[3]);
+                                a.putString("DevOpenId",Talktoid);
+                                a.putString("data",content);
+                            }
+                            else if (str.equals("IOC")) {
+                                msg.obj ="IOC";
                             }
                             else if (str.equals("ADS")) {
                                 msg.obj ="ADS";
@@ -242,7 +259,7 @@ public class TalkThread implements Runnable {
                             }*/
                             else if(str.equals("UPD")){
                                 String version=data.substring(0, 3);
-                                if(!version.equals(MainActivity.version))
+                                if(!version.equals(iotLaunch.Version))
                                 {
                                     msg.obj="UPD";
                                 }
@@ -251,7 +268,7 @@ public class TalkThread implements Runnable {
                                 }
                             }
                             else {
-                                msg.obj = "ERR";
+                                msg.obj = str;
                                 a.putString("data",data);
                                 a.putString("TalkToid"," ");
                             }

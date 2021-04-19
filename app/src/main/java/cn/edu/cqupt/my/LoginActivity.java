@@ -83,7 +83,7 @@ public class LoginActivity extends ActivityCollector {
                     Log.d("SI",Loginmsg.obj.toString());
                     tipDialog.show();
                     LoginConfig.saveUser(LoginActivity.this, namestring, MD5Util.stringtoMD5(passwordstring)+'\0');
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    Intent intent = new Intent(LoginActivity.this, iotLaunch.class);
                     LoginActivity.this.startActivity(intent);
                     tipDialog.dismiss();
                     LoginActivity.this.finish();

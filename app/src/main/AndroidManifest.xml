@@ -3,7 +3,6 @@
     package="cn.edu.cqupt.my">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
@@ -12,7 +11,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name="org.litepal.LitePalApplication"
+        android:name=".iotApp"
         android:allowBackup="true"
         android:icon="@drawable/isharelife"
         android:label="@string/app_name"
@@ -20,11 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".iotDisplay" >
-
-        </activity>
-
-
+        <activity android:name=".iotSceCreateActivity"></activity>
+        <activity android:name=".iotLaunch" />
+        <activity android:name=".iotDisplay" />
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
