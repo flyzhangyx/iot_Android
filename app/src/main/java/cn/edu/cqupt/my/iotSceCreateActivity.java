@@ -336,7 +336,8 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
         mTopBar.addRightImageButton(R.drawable.complete_sce_white_iot, R.id.more).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String cmd = new String();
+                String cmd = "";
+                String time_date = "";
                 int triggerDevKeyId = 0;
                 for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
                 {
@@ -346,8 +347,15 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                         break;
                     }
                 }
-                Toast.makeText(getContext(),trigger.DevId+"|"+triggerDevKeyId,Toast.LENGTH_SHORT).show();
-                cmd = cmd + triggerDevKeyId+"-"+trigger.DevClass+"-"+trigger.TriggerData+"-";
+                if(triggerDevKeyId==0)
+                {
+                    cmd = "0-0-0-";
+                }
+                else
+                {
+                    cmd = cmd + triggerDevKeyId+"-"+trigger.DevClass+"-"+trigger.TriggerData+"-";
+                }
+                String CondCmd = "";
                 for(Cond c:condList)
                 {
                     int condDevKeyId = 0;
@@ -359,9 +367,54 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                             break;
                         }
                     }
-                    cmd = cmd + condDevKeyId+"+"+c.DevClass+"+"+c.CondData+"+";
+                    CondCmd = CondCmd + condDevKeyId+"+"+c.DevClass+"+"+c.CondData+"+";
                 }
-                cmd = cmd + "-";
+
+                String Arm_Dev_ID = "1111111";
+                boolean isFindArmDev = false;
+                for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
+                {
+                    if(d.DevClass == 99)
+                    {
+                        Arm_Dev_ID = d.OpenId;
+                        isFindArmDev = true;
+                        break;
+                    }
+                }
+
+                boolean isEspRunOnly = false;
+
+                if(CondCmd != "")
+                {
+                    CondCmd = CondCmd + "-";
+                }
+                else
+                {
+                    if(cmd.equals("0-0-0-"))
+                    {
+                        Toast.makeText(getContext(),"请填写触发条件或者添加任意一条中间条件",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    else
+                    {
+                        isEspRunOnly = true;
+                    }
+                }
+
+                if(!isFindArmDev)
+                {
+                    if(cmd.equals("0-0-0-"))
+                    {
+                        Toast.makeText(getContext(),"请填写触发条件",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    else
+                    {
+                        isEspRunOnly = true;
+                    }
+                    Toast.makeText(getContext(),"未添加任何ARM设备，将不会任何中间条件只运行第一条执行指令",Toast.LENGTH_SHORT).show();
+                }
+
                 ArrayList<String> CmdList = new ArrayList<>();
                 for(Cmd c:cmdList)
                 {
@@ -374,25 +427,46 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                             break;
                         }
                     }
-                    String Cmd = cmd + cmdDevKeyId +"-"+c.DevClass+"-"+c.CmdData+"-";
+                    String Cmd;
+                    if(isEspRunOnly)
+                    {
+                        Cmd = cmd + cmdDevKeyId + "-" + c.DevClass + "-" + c.CmdData + "-";
+                    }
+                    else
+                    {
+                        Cmd = cmd + CondCmd + cmdDevKeyId + "-" + c.DevClass + "-" + c.CmdData + "-";
+                    }
                     CmdList.add(Cmd);
                 }
-                String Arm_Dev_ID = "1234566";
-                for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
+                if(CmdList.size()==0)
                 {
-                    if(d.DevClass == 99)
-                    {
-                        Arm_Dev_ID = d.OpenId;
-                        break;
-                    }
+                    Toast.makeText(getContext(),"未填写任何执行指令，请添加至少一条执行指令",Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                for(String s:CmdList) {
-                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                if(isEspRunOnly)
+                {
+                    String s = CmdList.get(0);
+                    Toast.makeText(getContext(),"未填写任何中间条件条件或者未找到ARM设备，单板策略将只会采取第一条执行指令",Toast.LENGTH_SHORT).show();
                     Bundle tmp = new Bundle();
-                    tmp.putString("TalkToid", Arm_Dev_ID);
+                    tmp.putString("TalkToid", trigger.DevId);
                     tmp.putString("data", s);
-                    tmp.putString("Checkcode", "SCE");
+                    tmp.putString("Checkcode", "DSC");
                     iotLaunch.sendMessage(tmp);
+                    Toast.makeText(getContext(),s,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if(isFindArmDev)
+                {
+                    Toast.makeText(getContext(),"找到ARM设备,将其作为执行指令主体委派者",Toast.LENGTH_SHORT).show();
+                    for(String s:CmdList) {
+                        Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                        Bundle tmp = new Bundle();
+                        tmp.putString("TalkToid", Arm_Dev_ID);
+                        tmp.putString("data", s);
+                        tmp.putString("Checkcode", "SCE");
+                        iotLaunch.sendMessage(tmp);
+                    }
                 }
                 popBackStack();
             }

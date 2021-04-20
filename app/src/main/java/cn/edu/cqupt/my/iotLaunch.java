@@ -78,6 +78,8 @@ public class iotLaunch extends BaseFragmentActivity {
                     Toast.makeText(getContext(),bundle.getString("DevOpenId")+"|"+bundle.getString("DevKeyId"),Toast.LENGTH_SHORT).show();
                 } else if (Loginmsg.obj.equals("IOC")) {
                     Toast.makeText(iotLaunch.this, "添加成功", Toast.LENGTH_SHORT).show();
+                }else if (Loginmsg.obj.equals("DSC")) {
+                    Toast.makeText(iotLaunch.this, "添加成功", Toast.LENGTH_SHORT).show();
                 } else if (Loginmsg.obj.equals("STO")) {
                     LoginActivity.autoSignclear();
                     iotLaunch.this.finish();

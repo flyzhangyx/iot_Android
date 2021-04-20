@@ -177,7 +177,11 @@ public class TalkThread implements Runnable {
                                 a.putString("DevClass",tmp[0]);
                                 a.putString("DevKeyId",tmp[1]);
                                 a.putString("DevOpenId",Talktoid);
-                            } else if (str.equals("IOT")) {
+                            } else if (str.equals("DSC")) {
+                                msg.obj ="DSC";
+                                a.putString("data",data);
+                                a.putString("TalkToid",Talktoid);
+                            }else if (str.equals("IOT")) {
                                 msg.obj ="IOT";
                                 String tmp[] = data.split("_");
                                 a.putString("DevClass",tmp[0]);
