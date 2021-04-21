@@ -62,7 +62,7 @@ public class iotLaunch extends BaseFragmentActivity {
                 Refresh();
             }
         };
-        timer.schedule(task, 0,5000);
+        timer.schedule(task, 0, 5000);
         qHandler = new Handler() {
             @Override
             public void handleMessage(Message Loginmsg) {
@@ -72,13 +72,13 @@ public class iotLaunch extends BaseFragmentActivity {
                     tmp.putString("DevOpenId", bundle.getString("DevOpenId"));
                     tmp.putInt("DevClass", Integer.parseInt(bundle.getString("DevClass")));
                     tmp.putString("DevData", "请刷新");
-                    tmp.putString("DevKeyId",bundle.getString("DevKeyId"));
+                    tmp.putString("DevKeyId", bundle.getString("DevKeyId"));
                     addIotDev(tmp);
-                    if(bundle.getString("DevOpenId").trim().equals("2609204"))
-                    Toast.makeText(getContext(),bundle.getString("DevOpenId")+"|"+bundle.getString("DevKeyId"),Toast.LENGTH_SHORT).show();
+                    //if(bundle.getString("DevOpenId").trim().equals("2609204"))
+                    //Toast.makeText(getContext(),bundle.getString("DevOpenId")+"|"+bundle.getString("DevKeyId"),Toast.LENGTH_SHORT).show();
                 } else if (Loginmsg.obj.equals("IOC")) {
                     Toast.makeText(iotLaunch.this, "添加成功", Toast.LENGTH_SHORT).show();
-                }else if (Loginmsg.obj.equals("DSC")) {
+                } else if (Loginmsg.obj.equals("DSC")) {
                     Toast.makeText(iotLaunch.this, "添加成功", Toast.LENGTH_SHORT).show();
                 } else if (Loginmsg.obj.equals("STO")) {
                     LoginActivity.autoSignclear();
@@ -158,7 +158,7 @@ public class iotLaunch extends BaseFragmentActivity {
                                                 String ID = builder.getEditText().getText().toString().trim();
                                                 if (!ID.equals("") && ID != null) {
                                                     boolean flag = false;
-                                                    if (ID.length() < 10 && ID.length() >6) {
+                                                    if (ID.length() < 10 && ID.length() > 6) {
                                                         for (DevStore d : DevStoreList) {
                                                             if (ID.equals(d.OpenId.trim())) {
                                                                 flag = true;
@@ -191,6 +191,13 @@ public class iotLaunch extends BaseFragmentActivity {
                                     getContext().startActivity(intent);
                                 }
                         ))
+                        .addAction(new QMUIQuickAction.Action().icon(R.drawable.timer_iot).text("定时执行").onClick(
+                                (quickAction, action, position) -> {
+                                    quickAction.dismiss();
+                                    Intent intent = new Intent(getContext(), iotNewTimerSce.class);
+                                    getContext().startActivity(intent);
+                                }
+                        ))
                         .show(v);
             }
         });
@@ -213,7 +220,7 @@ public class iotLaunch extends BaseFragmentActivity {
         String Data = tmp.getString("DevData");
         String keyId = tmp.getString("DevKeyId");
 
-        DevStore devStore = new DevStore(DevClass, DevOpenId,Integer.parseInt(keyId));
+        DevStore devStore = new DevStore(DevClass, DevOpenId, Integer.parseInt(keyId));
 
         QMUILoadingView loadingView = new QMUILoadingView(iotLaunch.this);
         View.OnClickListener onClickListener = v -> {
@@ -269,6 +276,38 @@ public class iotLaunch extends BaseFragmentActivity {
             ArrayAdapter adapter = new ArrayAdapter<>(getContext(), R.layout.simple_list_item, data);
             AdapterView.OnItemClickListener onItemClickListener = (adapterView, view, i, l) -> {
                 if (mNormalPopup != null) {
+                    if(data.get(i).equals("暂无数据"))
+                    {
+                        mNormalPopup.dismiss();
+                        return;
+                    }
+                    int indexClass = 0;
+                    int selectKey = 0;
+                    for (int key : devStore.DevData.keySet()) {
+                        if (key != 0)
+                            indexClass ++;
+                        if(indexClass == i+1) {
+                            selectKey = key;
+                            break;
+                        }
+                    }
+
+                    final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(getContext());
+                    int finalSelectKey = selectKey;
+                    builder.setTitle("设备："+devStore.KeyId+"|Class："+selectKey+"|数据下发")
+                            .setPlaceholder("请在此输入下发数据")
+                            .setInputType(InputType.TYPE_CLASS_TEXT)
+                            .addAction("取消", (dialog, index) -> dialog.dismiss())
+                            .addAction("下发", (dialog, index) -> {
+                                String data_cmd = builder.getEditText().getText().toString().trim();
+                                if (!data_cmd.equals("") && data_cmd != null) {
+                                    IotCmd(finalSelectKey +"_"+data_cmd+"_",devStore.OpenId);
+                                    //Toast.makeText(getContext(),finalSelectKey +"_"+data_cmd+"_",Toast.LENGTH_SHORT).show();
+                                    dialog.dismiss();
+                                } else {
+                                    Toast.makeText(getContext(), "请填入合法数据", Toast.LENGTH_SHORT).show();
+                                }
+                            }).show();
                     mNormalPopup.dismiss();
                 }
             };
@@ -282,7 +321,7 @@ public class iotLaunch extends BaseFragmentActivity {
                     .shadow(true)
                     .offsetYIfTop(QMUIDisplayHelper.dp2px(getContext(), 5))
                     //.skinManager(QMUISkinManager.defaultInstance(getContext()))
-                    .bgColor(R.color.app_color_blue_disabled)
+                    .bgColor(R.color.app_color_blue)
                     .onDismiss(new PopupWindow.OnDismissListener() {
                         @Override
                         public void onDismiss() {
@@ -297,14 +336,14 @@ public class iotLaunch extends BaseFragmentActivity {
         QMUICommonListItemView DevSwitch = mGroupListView.createItemView("设备开关:");
         DevSwitch.setAccessoryType(QMUICommonListItemView.ACCESSORY_TYPE_SWITCH);
         DevSwitch.getSwitch().setOnCheckedChangeListener((buttonView, isChecked) -> {
-                IotCmd(0+"_"+(isChecked==true?1:0)+"_",DevOpenId.trim());
-                devStore.isDataSetChecked = true;
+            IotCmd(0 + "_" + (isChecked == true ? 1 : 0) + "_", DevOpenId.trim());
+            devStore.isDataSetChecked = true;
         });//默认文字在左边   右侧选择按钮
         tt.addItemView(DevSwitch, null);
 
         tt.addTo(mGroupListView);
 
-        Collections.addAll(devStore.ItemViewList,DevUpdateTime, DevName, DevSwitch, OnlineInfo);
+        Collections.addAll(devStore.ItemViewList, DevUpdateTime, DevName, DevSwitch, OnlineInfo);
         DevStoreList.add(devStore);
     }
 
@@ -317,23 +356,20 @@ public class iotLaunch extends BaseFragmentActivity {
         for (DevStore d : DevStoreList) {
             if (d.OpenId != null && d.OpenId.equals(tmp.getString("DevOpenId"))) {
                 for (QMUICommonListItemView q1 : d.ItemViewList) {
-                    if (q1.getText().equals("在线信息:")&&tmp.getString("DevClass").equals("0")) {
+                    if (q1.getText().equals("在线信息:") && tmp.getString("DevClass").equals("0")) {
                         q1.setDetailText(tmp.getString("DevStatus"));
                     }
-                    if(q1.getText().equals("设备开关:")&&tmp.getString("DevClass").equals("0"))
-                    {
-                        if(!d.isDataSetChecked)
-                        {
+                    if (q1.getText().equals("设备开关:") && tmp.getString("DevClass").equals("0")) {
+                        if (!d.isDataSetChecked) {
                             q1.getSwitch().setChecked(tmp.getString("DevStatus").equals("1"));
                         }
                         d.isDataSetChecked = false;
                     }
-                    if(q1.getText().equals("更新时间:"))
-                    {
+                    if (q1.getText().equals("更新时间:")) {
                         q1.setDetailText(tmp.getString("DevContentUpdateTime"));
                     }
                 }
-                if(tmp.getString("DevContent").equals("status"))
+                if (tmp.getString("DevContent").equals("status"))
                     d.DevData.put(Integer.parseInt(tmp.getString("DevClass")), tmp.getString("DevStatus"));
                 else
                     d.DevData.put(Integer.parseInt(tmp.getString("DevClass")), tmp.getString("DevContent"));
@@ -355,6 +391,7 @@ public class iotLaunch extends BaseFragmentActivity {
                     bundle1.putString("Checkcode", a1.getString("Checkcode"));
                     bundle1.putString("TalkToid", a1.getString("TalkToid"));
                     bundle1.putString("data", a1.getString("data"));
+                    bundle1.putString("REPWD", a1.getString("save"));
                     bundle1.putString("PWD", PWD);
                     bundle1.putString("REPWD", "NULL");
                     sendLoginmsg.setData(bundle1);
@@ -386,6 +423,7 @@ public class iotLaunch extends BaseFragmentActivity {
                         Uri uri = Uri.parse("http://flyzhangyx.com/uubang.apk");
                         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                         startActivity(intent);
+                        popBackStack();
                     }
                 }).show();
     }
@@ -398,7 +436,7 @@ public class iotLaunch extends BaseFragmentActivity {
         public ArrayList<QMUICommonListItemView> ItemViewList = new ArrayList<>();
         public HashMap<Integer, String> DevData = new HashMap<>();
 
-        DevStore(int DevClass, String OpenId ,int keyId) {
+        DevStore(int DevClass, String OpenId, int keyId) {
             this.DevClass = DevClass;
             this.OpenId = OpenId;
             this.KeyId = keyId;
@@ -460,8 +498,7 @@ public class iotLaunch extends BaseFragmentActivity {
         }
     }
 
-    private void SendMessageNoThread(final Bundle a1)
-    {
+    private void SendMessageNoThread(final Bundle a1) {
         Message sendLoginmsg = new Message();
         try {
             Bundle bundle1 = new Bundle();
@@ -481,8 +518,7 @@ public class iotLaunch extends BaseFragmentActivity {
         }
     }
 
-    private void IotCmd(String Cmd,String IotId)
-    {
+    private void IotCmd(String Cmd, String IotId) {
         new Handler().postDelayed(() -> {
             Message sendLoginmsg = new Message();
             try {

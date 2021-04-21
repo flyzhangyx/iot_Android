@@ -1,13 +1,16 @@
 package cn.edu.cqupt.my;
 
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
+import com.qmuiteam.qmui.arch.QMUIFragmentActivity;
 import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
@@ -16,137 +19,92 @@ import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView;
 import com.qmuiteam.qmui.widget.grouplist.QMUIGroupListView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cn.edu.cqupt.my.base.BaseFragmentActivity;
-
-public class iotSceCreateActivity extends BaseFragmentActivity {
+public class iotNewTimerSce extends QMUIFragmentActivity {
     private QMUIGroupListView mGroupListView;
     private QMUITopBarLayout mTopBar;
     private int condIndex = 0;
     private int cmdIndex = 0;
     private boolean isCondComplete = false;
-
-    static class Trigger {
-        public String DevId;
-        public String DevClass;
-        public String TriggerData;
-
-        Trigger(String devId, String devClass, String triggerData) {
-            DevId = devId;
-            DevClass = devClass;
-            TriggerData = triggerData;
-        }
+    private String Time = "00:00:00";
+    private String weekDay = "1111111";
+    private Context getContext()
+    {
+        return this;
     }
 
-    static class Cond {
-        public int index;
-        public String DevId;
-        public String DevClass;
-        public String CondData;
-
-        Cond(int index, String devId, String devClass, String condData) {
-            DevId = devId;
-            DevClass = devClass;
-            CondData = condData;
-        }
-    }
-
-    static class Cmd {
-        public String DevId;
-        public String DevClass;
-        public String CmdData;
-
-        Cmd(String devId, String devClass, String cmdData) {
-            DevId = devId;
-            DevClass = devClass;
-            CmdData = cmdData;
-        }
-    }
-
-    private Trigger trigger;
-    private ArrayList<Cond> condList;
-    private ArrayList<Cmd> cmdList;
+    private iotSceCreateActivity.Trigger trigger;
+    private ArrayList<iotSceCreateActivity.Cond> condList;
+    private ArrayList<iotSceCreateActivity.Cmd> cmdList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_iot_sce_create);
+        setContentView(R.layout.activity_iot_new_timer_sce);
         initTopBar();
-        mGroupListView = findViewById(R.id.groupListView1);
+        mGroupListView = findViewById(R.id.groupListView2);
         condList = new ArrayList<>();
         cmdList = new ArrayList<>();
-        trigger = new Trigger("", "", "");
+        trigger = new iotSceCreateActivity.Trigger("", "", "");
 
         /****************************************************************************************/
-        QMUICommonListItemView devChoose = mGroupListView.createItemView("选择触发设备:");
+        QMUICommonListItemView devChoose = mGroupListView.createItemView("选择触发时间:");
         devChoose.setAccessoryType(QMUICommonListItemView.ACCESSORY_TYPE_CHEVRON);
-        int i = 0;
-        ArrayList<String> DevList = new ArrayList<>();
-        for (iotLaunch.DevStore a : iotLaunch.DevStoreList) {
-            DevList.add(a.OpenId);
-        }
         devChoose.setOnClickListener(v -> {
-            showDevList(true, true, "选择触发设备",
-                    DevList.size(), true, DevList, devChoose);
+            Calendar calendar = Calendar.getInstance();
+            TimePickerDialog dialog = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
+                @Override
+                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                    devChoose.setDetailText(hourOfDay+":"+minute +" 执行");
+                    Time = hourOfDay+":"+minute+":00";
+                }
+            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+            dialog.show();
         });
 
-        QMUICommonListItemView devClassChoose = mGroupListView.createItemView("选择触发数据类型:");
+        QMUICommonListItemView devClassChoose = mGroupListView.createItemView("选择触发周期:");
         devClassChoose.setAccessoryType(QMUICommonListItemView.ACCESSORY_TYPE_CHEVRON);
         devClassChoose.setOnClickListener(v -> {
-            if (trigger.DevId.equals("")) {
-                Toast.makeText(getContext(), "请先选择设备", Toast.LENGTH_SHORT).show();
-            } else {
-                iotLaunch.DevStore dev = null;
-                for (iotLaunch.DevStore a : iotLaunch.DevStoreList) {
-                    if (a.OpenId.equals(trigger.DevId)) {
-                        dev = a;
-                        break;
-                    }
-                }
-                Set<Integer> key = dev.DevData.keySet();
-                ArrayList<String> DevClass = new ArrayList<>();
-                for (int Key : key) {
-                    DevClass.add("类型：[" + Key + "]|数据：[" + dev.DevData.get(Key) + "]");
-                }
-                showDevClass(true, true, "选择触发数据类型",
-                        DevClass.size(), true, DevClass, devClassChoose);
-            }
-        });
-
-        QMUICommonListItemView devDataTrigger = mGroupListView.createItemView("填写数据触发条件:");
-        devDataTrigger.setOrientation(QMUICommonListItemView.HORIZONTAL);
-        devDataTrigger.setOnClickListener(v -> {
-            final QMUIDialog.EditTextDialogBuilder builder = new QMUIDialog.EditTextDialogBuilder(getContext());
-            builder.setTitle("填写触发条件")
-                    .setPlaceholder("[判断符][数据]例:{>50}")
-                    .setInputType(InputType.TYPE_CLASS_TEXT)
-                    .addAction("取消", (dialog, index) -> dialog.dismiss())
-                    .addAction("确定", (dialog, index) -> {
-                        String CmdData = builder.getEditText().getText().toString().trim();
-                        if (!CmdData.equals("") && CmdData != null && (CmdData.contains(">") || CmdData.contains("=") || CmdData.contains("<"))) {
-                            trigger.TriggerData = CmdData;
-                            devDataTrigger.setDetailText(CmdData);
-                            dialog.dismiss();
-                        } else {
-                            Toast.makeText(getContext(), "请填入合法触发条件", Toast.LENGTH_SHORT).show();
-                        }
-                    }).show();
+            showMultiChoiceDialog(devClassChoose);
         });
 
         QMUIGroupListView.newSection(getContext())
-                .setTitle("触发条件:当某设备发生什么变化时")
+                .setTitle("触发时间")
                 .addItemView(devChoose, null)
                 .addItemView(devClassChoose, null)
-                .addItemView(devDataTrigger, null)
                 .addTo(mGroupListView);
 
         /********************************************************************/
         addButtonShow();
 
+    }
+
+    private void showMultiChoiceDialog(QMUICommonListItemView dateChoose) {
+        final String[] items = new String[]{"周一", "周二", "周三", "周四", "周五", "周六","周天"};
+        final QMUIDialog.MultiCheckableDialogBuilder builder = new QMUIDialog.MultiCheckableDialogBuilder(getContext())
+                .setCheckedItems(new int[]{0,1,2,3,4,5,6})
+                .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
+                .addItems(items, (dialog, which) -> {
+
+                });
+        builder.addAction("取消", (dialog, index) -> dialog.dismiss());
+        builder.addAction("提交", (dialog, index) -> {
+            int date[] = new int[7];
+            for(int i = 0 ; i<7;i++)
+                date[i] = '0';
+            for (int i = 0; i < builder.getCheckedItemIndexes().length; i++) {
+                date[builder.getCheckedItemIndexes()[i]] = '1';
+            }
+            weekDay = new String(date,0,7);
+            dialog.dismiss();
+            dateChoose.setDetailText(weekDay);
+        });
+        builder.create().show();
     }
 
     private void addButtonShow()
@@ -184,7 +142,6 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
             }
         });
         QMUIGroupListView.newSection(getContext())
-                //.setTitle("添加中间条件或者直接添加执行指令")
                 .addItemView(CondAdd, null)
                 .addTo(mGroupListView);
     }
@@ -193,7 +150,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
         /****************************************************************************************/
         int Index = condIndex;
         condIndex++;
-        Cond cond = new Cond(Index, "", "", "");
+        iotSceCreateActivity.Cond cond = new iotSceCreateActivity.Cond(Index, "", "", "");
         QMUICommonListItemView devChoose = mGroupListView.createItemView("选择条件设备:");
         devChoose.setAccessoryType(QMUICommonListItemView.ACCESSORY_TYPE_CHEVRON);
         ArrayList<String> DevList = new ArrayList<>();
@@ -246,7 +203,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                             {
                                 condList.set(Index,cond);
                             }
-                           else
+                            else
                             {
                                 condList.add(cond);
                             }
@@ -268,7 +225,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
         /****************************************************************************************/
         int Index = cmdIndex;
         cmdIndex++;
-        Cmd cmd = new Cmd("", "", "");
+        iotSceCreateActivity.Cmd cmd = new iotSceCreateActivity.Cmd("", "", "");
         QMUICommonListItemView devChoose = mGroupListView.createItemView("选择执行设备:");
         devChoose.setAccessoryType(QMUICommonListItemView.ACCESSORY_TYPE_CHEVRON);
         ArrayList<String> DevList = new ArrayList<>();
@@ -340,39 +297,18 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                 .addTo(mGroupListView);
     }
 
-    private Context getContext() {
-        return iotSceCreateActivity.this;
-    }
 
     private void initTopBar() {
-        mTopBar = findViewById(R.id.topbar1);
+        mTopBar = findViewById(R.id.topbar_iot_timer);
         mTopBar.addLeftImageButton(R.drawable.qmui_icon_topbar_back, R.id.exit).setOnClickListener(v -> {
             popBackStack();
         });
         mTopBar.addRightImageButton(R.drawable.complete_sce_white_iot, R.id.more).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String cmd = "";
-                String time_date = "";
-                int triggerDevKeyId = 0;
-                for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
-                {
-                    if (d.OpenId.trim().equals(trigger.DevId.trim()))
-                    {
-                        triggerDevKeyId = d.KeyId;
-                        break;
-                    }
-                }
-                if(triggerDevKeyId==0)
-                {
-                    cmd = "0-0-=0-";
-                }
-                else
-                {
-                    cmd = cmd + triggerDevKeyId+"-"+trigger.DevClass+"-"+trigger.TriggerData+"-";
-                }
+                String cmd = "0-1-=0-";
                 String CondCmd = "";
-                for(Cond c:condList)
+                for(iotSceCreateActivity.Cond c:condList)
                 {
                     int condDevKeyId = 0;
                     for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
@@ -406,34 +342,20 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                 }
                 else
                 {
-                    if(cmd.equals("0-0-=0-"))
-                    {
-                        Toast.makeText(getContext(),"请填写触发条件或者添加任意一条中间条件",Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    else
-                    {
-                        isEspRunOnly = true;
-                    }
-                }
-                if(isEspRunOnly)
-                    isFindArmDev = false;
-                if(!isFindArmDev)
-                {
-                    if(cmd.equals("0-0-=0-"))
-                    {
-                        Toast.makeText(getContext(),"请填写触发条件",Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    else
-                    {
-                        isEspRunOnly = true;
-                    }
-                    Toast.makeText(getContext(),"未添加任何ARM设备，将不会任何中间条件只运行第一条执行指令",Toast.LENGTH_SHORT).show();
+                    isEspRunOnly = true;
                 }
 
+                if(!isFindArmDev)
+                {
+                    Toast.makeText(getContext(),"未添加任何ARM设备，将不会添加任何中间条件只运行第一条执行指令",Toast.LENGTH_SHORT).show();
+                    isEspRunOnly = true;
+                }
+
+                if(isEspRunOnly)
+                    isFindArmDev = false;
+
                 ArrayList<String> CmdList = new ArrayList<>();
-                for(Cmd c:cmdList)
+                for(iotSceCreateActivity.Cmd c:cmdList)
                 {
                     int cmdDevKeyId = 0;
                     for(iotLaunch.DevStore d:iotLaunch.DevStoreList)
@@ -447,7 +369,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                     String Cmd;
                     if(isEspRunOnly)
                     {
-                        Cmd = cmd + cmdDevKeyId + "-" + c.DevClass + "-" + c.CmdData + "-";
+                        Cmd = cmdDevKeyId + "-" + c.DevClass + "-" + c.CmdData + "-";
                     }
                     else
                     {
@@ -460,17 +382,17 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                     Toast.makeText(getContext(),"未填写任何执行指令，请添加至少一条执行指令",Toast.LENGTH_SHORT).show();
                     return;
                 }
+
                 if(isEspRunOnly)
                 {
                     String s = CmdList.get(0);
                     Toast.makeText(getContext(),"未填写任何中间条件条件或者未找到ARM设备，单板策略将只会采取第一条执行指令",Toast.LENGTH_SHORT).show();
                     Bundle tmp = new Bundle();
-                    tmp.putString("TalkToid", trigger.DevId);
-                    tmp.putString("data", s);
+                    tmp.putString("TalkToid", cmdList.get(0).DevId);
+                    tmp.putString("data", s+"~"+Time+"_"+weekDay+"_"+"~");
                     tmp.putString("Checkcode", "DSC");
                     iotLaunch.sendMessage(tmp);
                     //Toast.makeText(getContext(),s,Toast.LENGTH_SHORT).show();
-                    return;
                 }
 
                 if(isFindArmDev)
@@ -480,7 +402,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                         Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
                         Bundle tmp = new Bundle();
                         tmp.putString("TalkToid", Arm_Dev_ID);
-                        tmp.putString("data", s);
+                        tmp.putString("data", s+"~"+Time+"_"+weekDay+"_"+"~");
                         tmp.putString("Checkcode", "SCE");
                         iotLaunch.sendMessage(tmp);
                     }
@@ -488,7 +410,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                 popBackStack();
             }
         });
-        mTopBar.setTitle("添加智能场景");
+        mTopBar.setTitle("添加定时指令");
     }
 
     /*******************************************************************************/
@@ -561,7 +483,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                                  boolean addCancelBtn,
                                  CharSequence title,
                                  int itemCount,
-                                 boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devChoose, Cond cond) {
+                                 boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devChoose, iotSceCreateActivity.Cond cond) {
         QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getContext());
         builder.setGravityCenter(gravityCenter)
                 .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
@@ -586,7 +508,7 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
                                   boolean addCancelBtn,
                                   CharSequence title,
                                   int itemCount,
-                                  boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devClassChoose, Cond cond) {
+                                  boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devClassChoose, iotSceCreateActivity.Cond cond) {
         QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getContext());
         builder.setGravityCenter(gravityCenter)
                 .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
@@ -607,10 +529,10 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
     }
     /**************************************************************************************/
     private void showDevListCmd(boolean gravityCenter,
-                                 boolean addCancelBtn,
-                                 CharSequence title,
-                                 int itemCount,
-                                 boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devChoose, Cmd cmd) {
+                                boolean addCancelBtn,
+                                CharSequence title,
+                                int itemCount,
+                                boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devChoose, iotSceCreateActivity.Cmd cmd) {
         QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getContext());
         builder.setGravityCenter(gravityCenter)
                 .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
@@ -632,10 +554,10 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
     }
 
     private void showDevClassCmd(boolean gravityCenter,
-                                  boolean addCancelBtn,
-                                  CharSequence title,
-                                  int itemCount,
-                                  boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devClassChoose, Cmd cmd) {
+                                 boolean addCancelBtn,
+                                 CharSequence title,
+                                 int itemCount,
+                                 boolean allowDragDismiss, ArrayList<String> itemList, QMUICommonListItemView devClassChoose, iotSceCreateActivity.Cmd cmd) {
         QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getContext());
         builder.setGravityCenter(gravityCenter)
                 .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
@@ -655,3 +577,37 @@ public class iotSceCreateActivity extends BaseFragmentActivity {
         builder.build().show();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*button.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View v) {
+        Calendar calendar = Calendar.getInstance();
+        TimePickerDialog dialog = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
+@Override
+public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        String desc = String.format("您选择%d时%d分",hourOfDay,minute);
+        //tv_distime.setText(desc);
+        Toast.makeText(getContext(),desc,Toast.LENGTH_SHORT).show();
+        }
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        true);
+        dialog.show();
+        }
+        });*/
